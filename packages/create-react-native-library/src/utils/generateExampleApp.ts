@@ -38,13 +38,9 @@ const PACKAGES_TO_ADD_DEV = {
 };
 
 const PACKAGES_TO_ADD_WEB = {
+  '@expo/metro-runtime': '~3.2.1',
   'react-dom': '18.2.0',
   'react-native-web': '~0.18.10',
-};
-
-const PACKAGES_TO_ADD_WEB_DEV = {
-  '@expo/webpack-config': '^18.0.1',
-  'babel-loader': '^8.1.0',
 };
 
 export default async function generateExampleApp({
@@ -77,8 +73,14 @@ export default async function generateExampleApp({
           '--skip-install',
           '--npm',
         ]
-      : // `npx create-expo-app example --no-install`
-        ['create-expo-app@latest', directory, '--no-install'];
+      : // `npx create-expo-app example --no-install --template blank`
+        [
+          'create-expo-app@latest',
+          directory,
+          '--no-install',
+          '--template',
+          'blank',
+        ];
 
   await spawn('npx', args, {
     cwd: dest,
@@ -155,10 +157,6 @@ export default async function generateExampleApp({
       dependencies[name] = bundledNativeModules[name] || version;
     });
 
-    Object.entries(PACKAGES_TO_ADD_WEB_DEV).forEach(([name, version]) => {
-      devDependencies[name] = bundledNativeModules[name] || version;
-    });
-
     scripts.web = 'expo start --web';
   }
 
@@ -166,30 +164,44 @@ export default async function generateExampleApp({
     spaces: 2,
   });
 
-  // If the library is on new architecture, enable new arch for iOS and Android
-  if (arch === 'new') {
-    // Android
-    // Change newArchEnabled=false to newArchEnabled=true in example/android/gradle.properties
-    const gradleProperties = await fs.readFile(
+  if (type === 'native') {
+    let gradleProperties = await fs.readFile(
       path.join(directory, 'android', 'gradle.properties'),
       'utf8'
     );
 
+    // Disable Jetifier.
+    // Remove this when the app template is updated.
+    gradleProperties = gradleProperties.replace(
+      'android.enableJetifier=true',
+      'android.enableJetifier=false'
+    );
+
+    // If the library is on new architecture, enable new arch for iOS and Android
+    if (arch === 'new') {
+      // iOS
+      // Add ENV['RCT_NEW_ARCH_ENABLED'] = 1 on top of example/ios/Podfile
+      const podfile = await fs.readFile(
+        path.join(directory, 'ios', 'Podfile'),
+        'utf8'
+      );
+
+      await fs.writeFile(
+        path.join(directory, 'ios', 'Podfile'),
+        "ENV['RCT_NEW_ARCH_ENABLED'] = '1'\n\n" + podfile
+      );
+
+      // Android
+      // Change newArchEnabled=false to newArchEnabled=true in example/android/gradle.properties
+      gradleProperties = gradleProperties.replace(
+        'newArchEnabled=false',
+        'newArchEnabled=true'
+      );
+    }
+
     await fs.writeFile(
       path.join(directory, 'android', 'gradle.properties'),
-      gradleProperties.replace('newArchEnabled=false', 'newArchEnabled=true')
-    );
-
-    // iOS
-    // Add ENV['RCT_NEW_ARCH_ENABLED'] = 1 on top of example/ios/Podfile
-    const podfile = await fs.readFile(
-      path.join(directory, 'ios', 'Podfile'),
-      'utf8'
-    );
-
-    await fs.writeFile(
-      path.join(directory, 'ios', 'Podfile'),
-      "ENV['RCT_NEW_ARCH_ENABLED'] = '1'\n\n" + podfile
+      gradleProperties
     );
   }
 }
