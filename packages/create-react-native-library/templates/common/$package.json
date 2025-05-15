@@ -50,7 +50,7 @@
 <% if (project.moduleConfig === 'nitro-modules') { -%>
     "nitrogen": "nitro-codegen",
 <% } -%>
-    "release": "release-it"
+    "release": "release-it --only-version"
   },
   "keywords": [
     "react-native",
@@ -91,26 +91,26 @@
     "eslint-plugin-prettier": "^5.2.3",
     "jest": "^29.7.0",
 <% if (project.moduleConfig === 'nitro-modules') { -%>
-    "nitro-codegen": "^<%- versions.nitroCodegen %>",
+    "nitro-codegen": "^<%- versions.nitro %>",
 <% } -%>
     "prettier": "^3.0.3",
     "react": "19.0.0",
     "react-native": "0.78.1",
     "react-native-builder-bob": "^<%- versions.bob %>",
 <% if (project.moduleConfig === 'nitro-modules') { -%>
-    "react-native-nitro-modules": "^<%- versions.nitroModules %>",
+    "react-native-nitro-modules": "^<%- versions.nitro %>",
 <% } -%>
     "release-it": "^17.10.0",
 <% if (example !== 'expo') { -%>
     "turbo": "^1.10.7",
 <% } -%>
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "react": "*",
 <% if (project.moduleConfig === 'nitro-modules') { -%>
     "react-native": "*",
-    "react-native-nitro-modules": "^<%- versions.nitroModules %>"
+    "react-native-nitro-modules": "^<%- versions.nitro %>"
 <% } else { -%>
     "react-native": "*"
 <% } -%>

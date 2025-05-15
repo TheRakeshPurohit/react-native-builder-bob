@@ -58,9 +58,7 @@ export async function prompt<
 ): Promise<PromptAnswers & Argv> {
   const interactive =
     options?.interactive ??
-    Boolean(
-      process.stdout.isTTY && process.env.TERM !== 'dumb' && !process.env.CI
-    );
+    (process.stdout.isTTY && process.env.TERM !== 'dumb' && !process.env.CI);
 
   const onCancel = () => {
     // Exit the CLI on Ctrl+C
@@ -182,7 +180,7 @@ export async function prompt<
     if (missingQuestions.length) {
       onError(
         `Missing values for options: ${missingQuestions
-          .map(kleur.blue)
+          .map((q) => kleur.blue(q))
           .join(', ')}`
       );
     }
@@ -196,6 +194,7 @@ export async function prompt<
 
   validate(result, questions, onError);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return result as PromptAnswers & Argv;
 }
 
@@ -212,8 +211,8 @@ function validate<T extends string>(
     const question = Array.isArray(questions)
       ? questions.find((q) => q.name === key)
       : questions.name === key
-      ? questions
-      : null;
+        ? questions
+        : null;
 
     if (question == null) {
       continue;
